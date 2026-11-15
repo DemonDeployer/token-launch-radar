@@ -368,12 +368,12 @@ export function farmSteps(p: SnapshotProtocol, age: number | null): FarmStep[] {
     },
     {
       text: action,
-      cost: `$${capital} of capital and about $${capital >= 150 ? 8 : 4} of gas`,
+      cost: `$${capital} of capital and ~$${capital >= 150 ? 8 : 4} of gas`,
       time: '15 minutes to set up',
     },
     {
       text: `Make one qualifying action each week, such as a deposit, a borrow, a swap or a vote.`,
-      cost: 'about $2 of gas a week',
+      cost: '~$2 of gas a week',
       time: '10 minutes a week',
     },
     {

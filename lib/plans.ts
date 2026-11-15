@@ -339,7 +339,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
     steps: [
       {
         text: 'Buy USDC on an exchange and withdraw it to a Stellar wallet like Freighter.',
-        cost: 'about $0.01 in XLM fees',
+        cost: '~$0.01 in XLM fees',
         time: '10 min',
       },
       {
@@ -535,7 +535,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
       },
       {
         text: 'Deposit USDC with approve + deposit for ERC-4626 shares; total fees on Arc are ~$0.02.',
-        cost: 'about $0.02 in USDC',
+        cost: '~$0.02 in USDC',
         time: '5 min',
       },
       {
@@ -597,7 +597,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
       },
       {
         text: 'Fund it with BTC you can lock long term, e.g. 0.05-0.5 BTC across channels; opening each channel is one on-chain tx.',
-        cost: 'about $0.30 a channel at low fees',
+        cost: '~$0.30 a channel at low fees',
         time: '1 hour',
       },
       {
@@ -680,7 +680,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
     steps: [
       {
         text: 'Add the Noble EVM chain to an EVM wallet and fund it with USDC through a CCTP or IBC route.',
-        cost: 'about $1-5 of gas',
+        cost: '~$1-5 of gas',
         time: '10-20 min',
       },
       {
@@ -964,7 +964,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
       },
       {
         text: 'Bridge USDC to Base through the official Base bridge or any major bridge and hold a little ETH on Base for gas.',
-        cost: 'about $1-5 gas and bridge fees',
+        cost: '~$1-5 gas and bridge fees',
         time: '10 min',
       },
       {

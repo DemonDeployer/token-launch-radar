@@ -6,6 +6,10 @@
 
 A token launch radar ranking pre-token DeFi protocols by implied value, with farm plans for each.
 
+## How it works
+
+The program reads a sealed DefiLlama snapshot of the protocol universe and scores every pre-token protocol with one snapshot-derived model: TVL times growth, maturity and chain breadth. The top 200 by implied launch value form the board, the 40-protocol watchlist always included. Every row carries a concrete farm plan — steps, cost and time — researched from the protocol's own public sources, and the static dashboard reads the same board, so the page and the data can never disagree.
+
 ## Run it
 
 ```sh
