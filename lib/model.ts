@@ -1,5 +1,11 @@
 // The token radar's model: one snapshot of the protocol universe in, one ranked board out.
 //
+// V3 adds an out-of-sample validation of the model against traded-token comps and carries
+// researched-plan flags (researched, watchlist, warn note) into the dashboard rows. The
+// model itself is unchanged: radar-2, base multiple 0.30.
+
+import { createHash } from 'node:crypto';
+//
 // The board covers every slug in the snapshot's watchlist (the floor, never a ceiling) and adds
 // pre-token protocols below the watchlist floor, chosen by implied value, not by raw TVL: the
 // early rows the radar exists to find. A protocol is pre-token when its snapshot entry records
@@ -75,6 +81,80 @@ export const MODEL: ModelConstants = {
 /** The model's version label: the dashboard names it and the rules quote it. */
 export const MODEL_VERSION = 'radar-2';
 
+/**
+ * Out-of-sample validation of the model, computed at build from the snapshot's own
+ * traded-token comps (live-token, non-CEX, market cap and TVL both positive). The comps
+ * are split 50/50 by a deterministic slug hash — the last byte of sha256(slug): even
+ * goes to the fit half, odd to the test half — so the split never moves between runs.
+ * The fit half's median mcap/TVL is the fitted base multiple; the test half scores
+ * radar-2 against a fitted-flat baseline that keeps radar-2's growth, maturity and
+ * breadth multipliers and swaps only the base multiple (0.30) for the fitted one.
+ * A ratio is implied value over the market's own market cap: 1.0 is exact, and the
+ * within-2x / within-3x shares count test comps whose ratio lands in [0.5, 2] / [1/3, 3].
+ */
+export interface ModelValidation {
+  comps: number;
+  fit_n: number;
+  fit_median: number;
+  test_n: number;
+  radar2_median_ratio: number;
+  radar2_within_2x_pct: number;
+  radar2_within_3x_pct: number;
+  flat_median_ratio: number;
+  flat_within_2x_pct: number;
+  flat_within_3x_pct: number;
+}
+
+/** The median of a non-empty list, or null. */
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
+/** The split bit for one slug: the last byte of sha256(slug), even or odd. */
+function splitBit(slug: string): number {
+  const digest = createHash('sha256').update(slug, 'utf8').digest();
+  return digest[digest.length - 1]! % 2;
+}
+
+/** The model's out-of-sample validation, or null when the snapshot holds too few comps. */
+export function validateModel(snapshot: Snapshot, model: ModelConstants = MODEL): ModelValidation | null {
+  const comps = snapshot.protocols.filter(
+    (p) => !isPreToken(p) && p.category !== 'CEX' && (p.mcap_usd ?? 0) > 0 && p.tvl_usd > 0,
+  );
+  if (comps.length < 10) return null;
+  const fit = comps.filter((p) => splitBit(p.slug) === 0);
+  const test = comps.filter((p) => splitBit(p.slug) === 1);
+  if (fit.length === 0 || test.length === 0) return null;
+  const fitMedian = median(fit.map((p) => p.mcap_usd! / p.tvl_usd));
+  if (fitMedian === null || fitMedian <= 0) return null;
+  const flatModel: ModelConstants = { ...model, base_multiple: fitMedian };
+  const score = (base: ModelConstants): { medianRatio: number; within2x: number; within3x: number } => {
+    const ratios = test.map((p) => impliedValue(p, snapshot.as_of, base).implied / p.mcap_usd!);
+    const med = median(ratios);
+    if (med === null) return { medianRatio: 0, within2x: 0, within3x: 0 };
+    const within = (lo: number, hi: number): number =>
+      Math.round((ratios.filter((r) => r >= lo && r <= hi).length / ratios.length) * 100);
+    return { medianRatio: Math.round(med * 100) / 100, within2x: within(0.5, 2), within3x: within(1 / 3, 3) };
+  };
+  const radar2 = score(model);
+  const flat = score(flatModel);
+  return {
+    comps: comps.length,
+    fit_n: fit.length,
+    fit_median: Math.round(fitMedian * 1000) / 1000,
+    test_n: test.length,
+    radar2_median_ratio: radar2.medianRatio,
+    radar2_within_2x_pct: radar2.within2x,
+    radar2_within_3x_pct: radar2.within3x,
+    flat_median_ratio: flat.medianRatio,
+    flat_within_2x_pct: flat.within2x,
+    flat_within_3x_pct: flat.within3x,
+  };
+}
+
 /** How many pre-token protocols below the watchlist floor the early radar carries, by implied value. */
 export const EARLY_ROWS = 160;
 
@@ -105,6 +185,7 @@ export interface BoardRow {
   age_days: number | null;
   implied_value_usd: number;
   blurb: string;
+  note: string | null;
   model: {
     base_multiple: number;
     growth_pct: number;
@@ -134,6 +215,9 @@ export interface RadarRow {
   breadth_multiplier: number;
   blurb: string;
   farm_steps: string[];
+  researched: boolean;
+  watchlist: boolean;
+  note: string | null;
 }
 
 /** A live-token protocol: it already trades, so the board shows the market's own value, not a model's. */
@@ -158,6 +242,7 @@ export interface RadarData {
   board_size: number;
   early_size: number;
   live_size: number;
+  validation: ModelValidation | null;
   rows: RadarRow[];
   live: LiveRow[];
 }
@@ -274,6 +359,7 @@ export function buildBoard(snapshot: Snapshot, model: ModelConstants = MODEL): B
     age_days: s.age,
     implied_value_usd: s.implied,
     blurb: blurbFor(s.p),
+    note: PLANS[s.p.slug]?.note ?? null,
     model: {
       base_multiple: model.base_multiple,
       growth_pct: s.growthPct,
@@ -412,7 +498,7 @@ export function liveRows(snapshot: Snapshot): LiveRow[] {
 }
 
 /** A board row's compact form for data.js, with its farm plan carried along. */
-export function radarRow(row: BoardRow): RadarRow {
+export function radarRow(row: BoardRow, watchlist: boolean): RadarRow {
   return {
     rank: row.rank,
     slug: row.slug,
@@ -430,6 +516,9 @@ export function radarRow(row: BoardRow): RadarRow {
     breadth_multiplier: row.model.breadth_multiplier,
     blurb: row.blurb,
     farm_steps: row.farm_steps,
+    researched: PLANS[row.slug] !== undefined,
+    watchlist,
+    note: row.note,
   };
 }
 
@@ -448,7 +537,8 @@ export function buildRadar(snapshot: Snapshot, model: ModelConstants = MODEL): {
     board_size: board.length,
     early_size: early,
     live_size: live.length,
-    rows: board.map(radarRow),
+    validation: validateModel(snapshot, model),
+    rows: board.map((r) => radarRow(r, snapshot.watchlist.includes(r.slug))),
     live,
   };
   return { board, radar };

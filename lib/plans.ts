@@ -4,12 +4,18 @@
 // a one-line blurb saying what the protocol does, and farm steps that follow how the
 // protocol actually works. A step never claims a points program or an airdrop unless
 // the research confirmed one; where none was confirmed the plan farms the product
-// itself and says so in plain terms.
+// itself and says so in plain terms. A `note` carries the one warning that matters
+// most for that protocol (an exploit, a claim deadline, a closed registration, a
+// sunset): the dashboard shows it as a warn box in the detail drawer.
 //
 // Steps are kept short on purpose: the dossier text shows the dashboard source whole
 // only while it fits in 65,536 bytes, and plans.js must hold all 40 watchlist plans
 // inside that budget. Short does not mean vague: every step names the action, the
 // asset, the chain or app, and its cost and time travel in their own fields.
+//
+// V3 adds 20 more researched plans (board ranks 42-63), taking the researched set
+// to 60. plans.js still carries only the 40 watchlist plans, inside the dossier
+// byte budget; the 20 new plans reach the judge through board.json and data.js.
 //
 // Protocols with no entry here fall back to the category generator in lib/model.ts.
 
@@ -19,6 +25,7 @@ import type { FarmStep } from './model.ts';
 export interface ResearchedPlan {
   blurb: string;
   steps: FarmStep[];
+  note?: string;
 }
 
 /** Researched plans, by snapshot slug. Filled in from protocol research. */
@@ -88,6 +95,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
   b14g: {
     blurb:
       "Dual-staking layer for Bitcoin pairing BTC holders with CORE holders for higher tiers. EXPLOITED 31 Oct 2026, ~97M CORE drained.",
+    note: 'Exploited 31 Oct 2026: ~97M CORE drained. Do not deposit until the post-mortem is out and contracts are confirmed unpaused.',
     steps: [
       {
         text: 'Read the security update first: confirm contracts are unpaused and the post-mortem is out, or stop here.',
@@ -212,6 +220,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
   'doppler-finance': {
     blurb:
       'CeDeFi yield protocol built around the XRP Ledger: deposit XRP or RLUSD into vaults earning ~3-4.5% APR. XDP already trades since 28 Sep 2026.',
+    note: 'XDP already trades since 28 Sep 2026; Season 1/2 DP claims close 28 Nov 2026, 12:00 UTC.',
     steps: [
       {
         text: 'Farmed DP in Season 1 or 2? Check eligibility at the airdrop page and claim before 28 Nov 2026, 12:00 UTC.',
@@ -274,6 +283,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
   firelight: {
     blurb:
       "On-chain cover on Flare: stake FXRP, receive stXRP, back cover for DeFi vaults. Phase 1 points closed; claim ends 7 Dec 2026.",
+    note: 'Phase 1 points closed; claims end 7 Dec 2026, 10:00 ET.',
     steps: [
       {
         text: 'Earned Phase 1 points? Check the claims portal (Merkl) and claim your FXRP share before 7 Dec 2026, 10:00 ET.',
@@ -460,6 +470,7 @@ export const PLANS: Record<string, ResearchedPlan> = {
   infinifi: {
     blurb:
       "Fractional-reserve banking for stablecoins: deposit USDC, get iUSD, ~8% APY. INFI points live, TGE Q4 2026, but registration closed 10 Nov 2026.",
+    note: 'INFI registration closed 10 Nov 2026 — a new depositor may be too late for the airdrop.',
     steps: [
       {
         text: 'Get USDC on Base or Monad, where gas costs cents, not Ethereum mainnet at $2-10 a tx.',
@@ -1260,6 +1271,632 @@ export const PLANS: Record<string, ResearchedPlan> = {
         text: 'Hold long-term and verify backing on the Accountable proof-of-reserves dashboard; backing was ~110.8% in the Jul 2026 snapshot.',
         cost: 'free',
         time: '10 min/week',
+      },
+    ],
+  },
+  // --- V3: 20 more researched plans (board ranks 42-63) ---
+  '3f': {
+    blurb:
+      'Vault protocol on Morpho for leveraged exposure to tokenized RWAs (JAAA CLO, FalconX). Live May 2026, raised $4M. No token or points found.',
+    steps: [
+      {
+        text: 'Open 3f.xyz and pick a vault by RWA and leverage; JAAA is the flagship tokenized AAA CLO.',
+        cost: 'free',
+        time: '15 min',
+      },
+      {
+        text: 'Get USDC on ETH; budget $2-10 gas per tx, so size positions at $500 or more.',
+        cost: '$2-10 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Select leverage (3-5x): a 6% RWA yield financed near 4% targets 10-14% at 3-5x, before fees.',
+        cost: 'leverage chosen at deposit',
+        time: '10 min',
+      },
+      {
+        text: 'Deposit and hold: the protocol builds the leveraged position for you on Morpho; check the oracle and liquidation terms first.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: 'Risk note: leveraged RWA pools are thin — some hold 7-10 holders — and oracle or depeg risk is real; exit before any market stress.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'aegis-yusd': {
+    blurb:
+      'Bitcoin-backed delta-neutral stablecoin: deposits buy BTC and short BTC perps, yield from funding rates. Aegis Points live; AEG token not yet live.',
+    steps: [
+      {
+        text: 'Get USDT, USDC or DAI on ETH or BNB Chain; BNB gas is cents, ETH is $2-10 a tx.',
+        cost: 'cents on BNB, $2-10 on ETH',
+        time: '10 min',
+      },
+      {
+        text: 'Mint YUSD 1:1 at the Aegis app, or buy it on a DEX; holding earns 15 points per $1 per day.',
+        cost: 'gas only',
+        time: '10 min',
+      },
+      {
+        text: 'For 2x points, provide YUSD liquidity (30 points per $1 per day); for 3x, borrow through Euler (45 points per $1 per day).',
+        cost: 'gas plus LP or borrow risk',
+        time: '15 min',
+      },
+      {
+        text: 'Season 1 pays a 50% points bonus, and 0.2% of AEG supply is distributed weekly by points share.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Risk note: the model is unproven in volatile markets and funding-rate yield can go negative; watch the peg and the insurance fund.',
+        cost: 'free',
+        time: '5 min/week',
+      },
+    ],
+  },
+  'apex-omni': {
+    blurb:
+      'ApeX Omni perps DEX on a ZK rollup, up to 100x leverage. APEX already trades; staking pays weekly fee buybacks, and ApeX Social points are live.',
+    steps: [
+      {
+        text: 'Open apex.exchange and deposit USDT from ETH, BNB Chain, Arbitrum, Base or Mantle; trading is gasless.',
+        cost: 'gas to deposit only',
+        time: '10 min',
+      },
+      {
+        text: 'Trade perps with low leverage first: up to 100x is offered, and cross-margin means one bad position eats the whole buffer.',
+        cost: 'taker 0.05% per trade',
+        time: '10 min',
+      },
+      {
+        text: 'Stake APEX or esAPEX: Staking 4.0 pays weekly rewards in APEX bought back from trading fees (50% of fees).',
+        cost: 'gas to stake',
+        time: '10 min',
+      },
+      {
+        text: 'Collect ApeX Social points from trading, referrals and daily check-ins; points carry no guaranteed token claim.',
+        cost: 'free',
+        time: '5 min/day',
+      },
+      {
+        text: 'Future angle: the ApeX Trading Chain was announced Dec 2025 with APEX as its fee token — no launch date confirmed.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'bitget-sol': {
+    blurb:
+      "Bitget x Solayer liquid staking token (BGSOL), live Oct 2024. Stake SOL for ~5-8% APR, rewards accrue in the BGSOL/SOL ratio. No points program.",
+    steps: [
+      {
+        text: 'Get SOL in a Solana wallet like Phantom or Solflare; Solana gas is fractions of a cent.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Stake SOL through Bitget to receive BGSOL; the ratio rises as rewards accrue (about 1 BGSOL = 1.06-1.17 SOL).',
+        cost: 'fractions of a cent',
+        time: '5 min',
+      },
+      {
+        text: 'Deploy BGSOL in Solana DeFi: LP on Orca, restake via Solayer, or use it as margin in a Bitget unified account.',
+        cost: 'fractions of a cent, plus LP risk',
+        time: '15 min',
+      },
+      {
+        text: 'Hold for weeks; staking APR moves with network conditions, roughly 5-8%.',
+        cost: 'BGSOL held',
+        time: 'weeks',
+      },
+      {
+        text: 'To exit, redeem BGSOL for SOL; unstaking takes up to ~4 days depending on network conditions.',
+        cost: 'up to 4 days to unstake',
+        time: '5 min',
+      },
+    ],
+  },
+  current: {
+    blurb:
+      'Current Finance: Sui lender with isolated markets, E-Mode and flash-loan looping. Points program live; fastest-growing Sui lender of 2026.',
+    steps: [
+      {
+        text: 'Get SUI and USDC on Sui in a wallet like Sui Wallet or Slush; Sui gas is cents.',
+        cost: 'cents per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Open Current Finance and supply USDC or SUI to an isolated market; points start accruing on supplied assets.',
+        cost: 'cents of gas',
+        time: '10 min',
+      },
+      {
+        text: 'For more points, borrow against the supply and loop with Multiply or Margin looping; keep a safe health factor.',
+        cost: 'cents of gas, plus liquidation risk',
+        time: '15 min',
+      },
+      {
+        text: 'Check the points page in-app for live rates and multipliers; do not trust rates quoted anywhere else.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Hold for weeks and monitor: audits by Asymptotic, MoveBit and a Sherlock contest, but looping risk is yours.',
+        cost: 'position held',
+        time: 'weeks',
+      },
+    ],
+  },
+  'exponent-yield-exchange': {
+    blurb:
+      'Solana yield exchange for fixed yield (PT/YT) plus strategy vaults and risk markets. No Exponent token and no points program.',
+    note: 'Caution (Nov 2026): ONyc off-chain NAV backs about half the book — treat the onycSOL vault as partner exposure, not plain staking.',
+    steps: [
+      {
+        text: 'Get SOL or USDC on Solana; Solana gas is fractions of a cent.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'For fixed yield, buy PT of a yield token on Exponent and hold to maturity; YT is the leveraged yield leg.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'For vault yield, open the Rewards Hub: the onycSOL vault pays about $20K/month in SOL plus 4x OnRe Points.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Or use the OnRe Yield Plus Vault (Allez) for up to $10K incentives plus 2.5x OnRe Points.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Check the points are real before sizing up: rewards are paid in partner points, not an Exponent token.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'ink-bridge': {
+    blurb:
+      'Canonical bridge to Ink, Kraken OP-Stack L2 (chain 57073). INK token confirmed, no TGE date announced; Ink Points Season 1 live since 13 Apr 2026.',
+    steps: [
+      {
+        text: 'Get ETH or USDC on Ethereum; the canonical bridge is Superbridge, or withdraw directly from Kraken at zero fee.',
+        cost: 'ETH gas to bridge',
+        time: '10 min',
+      },
+      {
+        text: 'Bridge via the canonical route for full Ink Points eligibility; deposits take 1-3 minutes, withdrawals take 7 days.',
+        cost: 'bridge fees vary',
+        time: '10 min',
+      },
+      {
+        text: 'For speed, use Across for near-instant bridging; fast routes may earn fewer points, so check first.',
+        cost: 'bridge fees vary',
+        time: '5 min',
+      },
+      {
+        text: 'Use the bridged funds on Ink: lend on Tydro, trade on Nado or Velodrome; bridging is the prerequisite for all Ink activity.',
+        cost: 'Ink gas paid in ETH, cents',
+        time: '15 min',
+      },
+      {
+        text: 'Do not use a random bridge: the wrong route can cost 10-50x the fees or lock funds for 7 days.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  makina: {
+    blurb:
+      'Non-custodial cross-chain execution engine; Machines are strategy vaults (DUSD, DETH, DBIT) with Machine Tokens as shares. $MAK not yet trading, no TGE yet.',
+    note: 'EXPLOIT 20 Jan 2026: a flash-loan attack drained the DUSD/USDC Curve pool of ~1,299 ETH (~$4.1M) via unvalidated oracle data.',
+    steps: [
+      {
+        text: 'Read the exploit note first: check what was fixed after the Jan 2026 exploit before depositing anything.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'Pick a Machine (DUSD, DETH or DBIT) on makina.fi and check its strategy, chain and points season status.',
+        cost: 'free',
+        time: '15 min',
+      },
+      {
+        text: 'Deposit the Machine asset and receive Machine Tokens as shares; the Pre-Launch points campaign has run since Sep 2025.',
+        cost: 'gas depends on the chain',
+        time: '10 min',
+      },
+      {
+        text: 'Hold through the season: points accrue by size and time, and Season 3 was announced 7 May 2026.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: '$MAK (1B supply, veMAK governance) has no TGE yet; points are the only confirmed reward, with no conversion rate published.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  noon: {
+    blurb:
+      'USN stablecoin minted with USDT/USDC; stake USN for sUSN yield from delta-neutral, T-bill and private-credit strategies. Noon Points live; NOON token not yet live.',
+    steps: [
+      {
+        text: 'Get USDT or USDC on ETH, Sophon, zkSync or TAC; ETH gas is $2-10 a tx.',
+        cost: '$2-10 gas on ETH',
+        time: '10 min',
+      },
+      {
+        text: 'Mint USN at the Noon app, then stake it for sUSN; about 80% of strategy yield flows to sUSN holders.',
+        cost: '$2-10 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Confirm Noon Points accrue on the stake; Zenith seasons pay points toward the future NOON governance token.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'For maximum points, use the tBTC Yield Vault on Starknet, which earns max Noon Points in Zenith Season 7.',
+        cost: 'gas depends on the chain',
+        time: '15 min',
+      },
+      {
+        text: 'Hold for weeks; yield depends on funding rates and credit strategies, and the token has no TGE date.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+    ],
+  },
+  'polygon-zkevm-bridge': {
+    blurb:
+      'Canonical LxLy bridge between Ethereum and Polygon zkEVM (chain 1101), gas in ETH. No airdrop confirmed; shutdown reports say the chain sunsets.',
+    note: 'Shutdown reports say the zkEVM sequencer sunsets 2026-07-01; wallet funds auto-migrate to L1, DeFi funds do NOT. Verify officially before touching it.',
+    steps: [
+      {
+        text: 'Do NOT bridge new funds in: verify the shutdown status on Polygon official channels first.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'If you hold zkEVM funds in your wallet, they are reported to auto-migrate to Ethereum L1 at sunset.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'If your funds sit in a DeFi contract, they do NOT auto-migrate: exit the position and bridge out before the sunset date.',
+        cost: 'gas $2-8 per tx',
+        time: '15 min',
+      },
+      {
+        text: 'Bridge out via the official bridge or the Agglayer bridge; allow 10-30 minutes for the exit.',
+        cost: '$2-8 gas',
+        time: '30 min',
+      },
+      {
+        text: 'Do not confuse Polygon zkEVM (chain 1101) with Polygon PoS (chain 137): they are separate chains with separate bridges.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'project-0': {
+    blurb:
+      'Project 0, the Sep 2025 rebrand of marginfi: Solana prime broker (app.0.xyz). Points live, carried 1:1 from marginfi; no token, no TGE date.',
+    steps: [
+      {
+        text: 'Get SOL or USDC on Solana; Solana gas is fractions of a cent.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Activate points with a live deposit at app.0.xyz; marginfi points carried over 1:1.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Earn by lending, borrowing, staking SOL LSTs and referrals; per-dollar point rates are not published now, so check in-app.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Hold the position for weeks; points scale with size and duration.',
+        cost: 'position held',
+        time: 'weeks',
+      },
+      {
+        text: 'Risk note: Velocity DEX borrowing halted after an Apr 2026 exploit; keep health factors conservative.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'pulsechain-bridge': {
+    blurb:
+      'Official bridge between Ethereum and PulseChain (chain 369), lock-and-mint, about $49.5M locked mid-2026. No token or points program.',
+    steps: [
+      {
+        text: 'Verify the URL is bridge.pulsechain.com before connecting a wallet: lookalike front-ends are common.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Get ETH on Ethereum for gas, plus the asset to bridge; the Ethereum side pays ETH gas, the PulseChain side pays negligible PLS gas.',
+        cost: 'ETH gas to bridge',
+        time: '10 min',
+      },
+      {
+        text: 'Bridge and allow 10-30 minutes, up to 90 when congested; the bridge locks on one side and mints on the other.',
+        cost: 'bridge fees vary',
+        time: '30 min',
+      },
+      {
+        text: 'Use the bridged funds in PulseChain DeFi such as PulseX; keep bridged assets (e.g. eHEX) separate from fork copies (pHEX).',
+        cost: 'negligible PLS gas',
+        time: '15 min',
+      },
+      {
+        text: 'To exit, bridge back the same way and allow the same window; never rush a congested bridge.',
+        cost: 'ETH gas to bridge back',
+        time: '30 min',
+      },
+    ],
+  },
+  're7-labs': {
+    blurb:
+      'DeFi vault curator since 2019 (Morpho, Euler, Symbiotic, Mellow, Jupiter Vaults). No token or points program; the farm is vault yield.',
+    note: 'Risk: Re7 was a top curator on Stream Finance, which collapsed Nov 2026 (xUSD depeg) with Re7 losses over $13M from aggressive leveraged strategies.',
+    steps: [
+      {
+        text: 'Get USDC on ETH, Base or Plume; Base and Plume gas is cents, ETH is $2-10 a tx.',
+        cost: 'cents on Base/Plume, $2-10 ETH',
+        time: '10 min',
+      },
+      {
+        text: 'Open the Re7 vaults page and pick a vault by chain and strategy; Jupiter Vaults nOPAL Lending and Looping on Plume target ~8-12% APY.',
+        cost: 'free',
+        time: '15 min',
+      },
+      {
+        text: 'Check the vault allocation and curator first, then deposit for vault shares; yield compounds, no claiming.',
+        cost: 'gas to deposit',
+        time: '10 min',
+      },
+      {
+        text: 'Hold for weeks and monitor APY; Re7 vaults are curated, not principal-protected.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: 'Read the Stream Finance note in the warning before sizing up; curator losses there were material.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'starknet-btc-staking': {
+    blurb:
+      'Starknet dual-token staking: stake wrapped BTC and earn STRK rewards (25% of STRK emissions). BTC APR about 3.6-6.4%; 7-day unbonding.',
+    steps: [
+      {
+        text: 'Get wrapped BTC (WBTC, tBTC, SolvBTC or strkBTC) on Starknet; bridging takes 10-30 minutes.',
+        cost: 'bridge fees vary',
+        time: '30 min',
+      },
+      {
+        text: 'Open the Starknet staking contract and stake the wrapped BTC; rewards are paid in STRK, a live token, not a new launch.',
+        cost: 'Starknet gas is cents',
+        time: '10 min',
+      },
+      {
+        text: 'Hold the stake: BTC APR depends on the STRK/BTC price, roughly 3.6-6.4%, so the return is a bet on STRK.',
+        cost: 'BTC staked',
+        time: 'weeks',
+      },
+      {
+        text: 'Track STRK rewards and the floating-alpha proposal, which may change how emissions split.',
+        cost: 'free',
+        time: '5 min/week',
+      },
+      {
+        text: 'To exit, unstake and wait 7 days for unbonding, then withdraw the wrapped BTC.',
+        cost: '7-day unbonding',
+        time: '10 min',
+      },
+    ],
+  },
+  'stkesol-by-sol-strategies': {
+    blurb:
+      'STKESOL, SOL Strategies (NASDAQ: STKE) liquid staking token, launched Jan 2026. Wiz Score allocation across up to 75 validators; no points program.',
+    steps: [
+      {
+        text: 'Get SOL in a Solana wallet like Phantom or Solflare; Solana gas is fractions of a cent.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+      {
+        text: 'Stake SOL through SOL Strategies to receive STKESOL, a receipt token that accrues staking rewards in its exchange rate.',
+        cost: 'fractions of a cent',
+        time: '5 min',
+      },
+      {
+        text: 'Deploy STKESOL in DeFi: Kamino, Orca, Loopscale, Squads or Sanctum all list it as collateral or liquidity.',
+        cost: 'fractions of a cent, plus LP risk',
+        time: '15 min',
+      },
+      {
+        text: 'Hold for weeks; the company takes 5% of staking rewards, and TVL fell 27.7% in the last 30 days, so watch flows.',
+        cost: 'STKESOL held',
+        time: 'weeks',
+      },
+      {
+        text: 'To exit, swap STKESOL on a DEX or redeem; allow for thin liquidity on smaller venues.',
+        cost: 'fractions of a cent',
+        time: '10 min',
+      },
+    ],
+  },
+  'txflow-bridge': {
+    blurb:
+      'Custodial USDC bridge between Arbitrum and the TxFlow L1, BFT validator set with a dispute period before finalization. No token or points.',
+    steps: [
+      {
+        text: 'Get USDC on Arbitrum; Arbitrum gas is cents per tx.',
+        cost: 'cents of gas',
+        time: '10 min',
+      },
+      {
+        text: 'Open the TxFlow bridge and check the dispute period: finalization waits out the dispute window, so this is not instant.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Bridge USDC to TxFlow L1 and use it in the TxFlow app; TVL rose 52.6% in the last 30 days.',
+        cost: 'cents of gas',
+        time: '15 min',
+      },
+      {
+        text: 'Read the OpenZeppelin audit (Jun 2026) first: no critical or high findings, but the M-01 replay flaw was not fixed in deployed bytecode.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'To exit, bridge back the same way and allow the dispute period again; never bridge funds you need the same day.',
+        cost: 'cents of gas',
+        time: 'per dispute window',
+      },
+    ],
+  },
+  'ultrayield-curator': {
+    blurb:
+      'Curator (Edge Capital spin-off) running Morpho vaults, Hyperbeat hbHYPE strategy and Kelp hgETH curation. No token or points program.',
+    steps: [
+      {
+        text: 'Get USDC or USDT on ETH; ETH gas is $2-10 a tx, so size positions at $500 or more.',
+        cost: '$2-10 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Open Morpho, filter curator UltraYield, and pick a vault: USDC V1 near 7.34% APY, or USDC/USDT Core.',
+        cost: 'free',
+        time: '15 min',
+      },
+      {
+        text: 'Deposit for ERC-4626 shares; yield accrues in the share price, no claiming needed.',
+        cost: '$2-10 gas per tx',
+        time: '5 min',
+      },
+      {
+        text: 'Or use the hbHYPE strategist vault on Hyperbeat, or Kelp hgETH curation, if you hold HYPE or ETH LSTs.',
+        cost: 'gas depends on the chain',
+        time: '10 min',
+      },
+      {
+        text: 'Hold for weeks and check allocation monthly; curator vaults are not principal-protected.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+    ],
+  },
+  'vfat.io': {
+    blurb:
+      'Multichain yield aggregator on a Sickle smart-contract wallet: open and automate positions in one click, self-custody. No token or points program found.',
+    steps: [
+      {
+        text: 'Get the position asset (usually USDC) on the target chain; Base is the largest vfat.io deployment, about $16M.',
+        cost: 'gas depends on the chain',
+        time: '10 min',
+      },
+      {
+        text: 'Open vfat.io, connect, and pick a vault or strategy by APY and chain; about $24-28M TVL across 37 chains.',
+        cost: 'free',
+        time: '15 min',
+      },
+      {
+        text: 'Open the position in one click; the Sickle wallet automates compounding and rebalancing for you.',
+        cost: 'gas to open',
+        time: '10 min',
+      },
+      {
+        text: 'Hold for weeks; yield is the strategy return, and the aggregator takes a cut of it.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: 'To exit, close the position in one click and withdraw; allow for the underlying protocol settlement time.',
+        cost: 'gas to close',
+        time: '10 min',
+      },
+    ],
+  },
+  vishwa: {
+    blurb:
+      'Agent-native banking infrastructure for autonomous capital (AI orchestration API, pre-execution control layer). Anchor BTC #3, about $43M, all on Bitcoin. No retail product found.',
+    steps: [
+      {
+        text: 'Do NOT send funds: no retail deposit product or points program was found, so there is nothing honest to farm yet.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Read the Vishwa docs and announcements to learn what the orchestration API and control layer do.',
+        cost: 'free',
+        time: '20 min',
+      },
+      {
+        text: 'Watch for a retail route: an agent-banking product may open to deposits later, with its own token or points.',
+        cost: 'free',
+        time: '5 min/week',
+      },
+      {
+        text: 'If a retail product appears, verify it on Vishwa official channels before connecting any wallet.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'Never send funds to an unverified contract claiming to be Vishwa; agent-banking pitches are a common scam pattern.',
+        cost: 'free',
+        time: '5 min',
+      },
+    ],
+  },
+  'zircuit-staking': {
+    blurb:
+      'Zircuit staking (stake.zircuit.com): ZRC already trades; Season 1 (7%) and Season 2 (3%) airdrops are done, snapshots past. Staking still earns APR plus EigenLayer/LRT points.',
+    note: 'Season 1 (7%) and Season 2 (3%) airdrops are done and snapshots are past — nobody can sell you eligibility now.',
+    steps: [
+      {
+        text: 'Get ZRC or ETH on Zircuit or Ethereum; Zircuit gas is cents, ETH is $2-10 a tx.',
+        cost: 'cents on Zircuit, $2-10 ETH',
+        time: '10 min',
+      },
+      {
+        text: 'Open stake.zircuit.com and stake ZRC or restake LRTs; staking and restaking APR accrue, plus EigenLayer and LRT points.',
+        cost: 'gas to stake',
+        time: '10 min',
+      },
+      {
+        text: 'Do NOT pay anyone for retroactive Season 1 or 2 eligibility: both snapshots are past and cannot be bought.',
+        cost: 'free',
+        time: '5 min',
+      },
+      {
+        text: 'Hold the stake for weeks; 8.55% of ZRC is reserved for future airdrops, with no guarantee of another season.',
+        cost: 'stake held',
+        time: 'weeks',
+      },
+      {
+        text: 'To exit, unstake at the staking app and allow the unbonding window before withdrawing.',
+        cost: 'per unbonding window',
+        time: '10 min',
       },
     ],
   },

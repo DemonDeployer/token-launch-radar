@@ -1,14 +1,12 @@
-// Token Radar's dashboard. It reads window.RADAR (written beside dashboard/ by main.ts)
-// and window.FARM_PLANS (dashboard/plans.js), and renders the ranked board, the filters,
-// and a per-protocol detail drawer. No network: every byte it shows is in data.js or plans.js.
+// Token Radar dashboard (window.RADAR in, ranked board out; no network). V3: row flags drive tags, notes and the watchlist toggle; the model panel has the out-of-sample check.
 (function () {
   'use strict';
 
   var DATA = window.RADAR;
   if (!DATA) return;
-  var PLANS = window.FARM_PLANS || {};
   var app = document.getElementById('board');
-  var state = { q: '', category: 'all', chain: 'all', tab: 'pre-token', sort: 'implied', dir: -1, selected: null };
+  var state = { q: '', category: 'all', chain: 'all', tab: 'pre-token', sort: 'implied', dir: -1, selected: null, watchlistOnly: false };
+  var researchedCount = DATA.rows.reduce(function (n, r) { return n + (r.researched ? 1 : 0); }, 0);
 
   var money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   function fmtUsd(n) {
@@ -82,6 +80,7 @@
   function visibleRows() {
     var q = state.q.trim().toLowerCase();
     return DATA.rows.filter(function (r) {
+      if (state.watchlistOnly && !r.watchlist) return false;
       if (state.category !== 'all' && r.category !== state.category) return false;
       if (state.chain !== 'all' && !(r.chains || []).includes(state.chain)) return false;
       if (!q) return true;
@@ -110,7 +109,7 @@
         h('span', { class: 'brand-name', text: 'Token Radar' })),
       h('div', { class: 'top-meta' },
         h('span', null, 'Snapshot ', h('b', { text: DATA.as_of })),
-        h('span', null, 'DefiLlama protocol index'),
+        h('span', null, 'DefiLlama index'),
         h('span', null, h('b', { text: DATA.model_version }), ' model'),
         h('span', null, h('b', { text: String(DATA.board_size) }), ' rows')
       )
@@ -119,12 +118,12 @@
 
   function intro() {
     return h('section', { class: 'lede' },
-      h('h1', { text: 'Forty watchlist protocols, ranked by what a launch would be worth' }),
+      h('h1', { text: 'Forty watchlist protocols, ranked by launch value' }),
       h('p', null,
         'The watchlist is the floor: every protocol with at least ', h('b', { text: '$' + Math.round(DATA.floor_usd / 1e6) + 'M' }),
-        ' of TVL and no token on record. The early radar adds ', h('b', { text: String(DATA.early_size) }),
-        ' pre-token protocols below that floor, picked by implied value. Implied value is a model, not a promise — and never a price.'),
-      h('p', null, 'Select any row for its model breakdown and farm plan.')
+        ' TVL and no token on record. The early radar adds ', h('b', { text: String(DATA.early_size) }),
+        ' pre-token protocols below that floor, picked by implied value. ' + researchedCount,
+        ' rows carry researched farm plans; the rest are model-generated. Implied value is a model, not a promise — and never a price.')
     );
   }
 
@@ -143,7 +142,7 @@
   function controls() {
     var categories = Array.from(new Set(DATA.rows.map(function (r) { return r.category || 'Other'; }))).sort();
     var chains = Array.from(new Set(DATA.rows.reduce(function (acc, r) { return acc.concat(r.chains || []); }, []))).sort();
-    var search = h('input', { type: 'search', id: 'q', placeholder: 'Search name, category or chain', value: state.q, 'aria-label': 'Search the board' });
+    var search = h('input', { type: 'search', id: 'q', placeholder: 'Search name, category, chain', value: state.q, 'aria-label': 'Search the board' });
     search.addEventListener('input', function () { state.q = search.value; writeHash(); render(); });
     var catSelect = h('select', { id: 'category', 'aria-label': 'Filter by category' },
       h('option', { value: 'all', text: 'All categories' }),
@@ -163,12 +162,13 @@
     sortSelect.addEventListener('change', function () { state.sort = sortSelect.value; state.dir = state.sort === 'name' ? 1 : -1; render(); });
     var pre = h('button', { type: 'button', 'aria-pressed': state.tab === 'pre-token' ? 'true' : 'false', text: 'Pre-token', onclick: function () { state.tab = 'pre-token'; render(); } });
     var live = h('button', { type: 'button', 'aria-pressed': state.tab === 'live' ? 'true' : 'false', text: 'Live token', onclick: function () { state.tab = 'live'; render(); } });
+    var wl = h('button', { type: 'button', 'aria-pressed': state.watchlistOnly ? 'true' : 'false', text: 'Watchlist', onclick: function () { state.watchlistOnly = !state.watchlistOnly; render(); } });
     return h('div', { class: 'controls' },
       h('div', { class: 'field' }, h('label', { for: 'q', text: 'Search' }), search),
       h('div', { class: 'field' }, h('label', { for: 'category', text: 'Category' }), catSelect),
       h('div', { class: 'field' }, h('label', { for: 'chain', text: 'Chain' }), chainSelect),
       h('div', { class: 'field' }, h('label', { for: 'sort', text: 'Sort' }), sortSelect),
-      h('div', { class: 'field' }, h('span', { class: 'lab', text: 'Token status' }), h('div', { class: 'tabs' }, pre, live)),
+      h('div', { class: 'field' }, h('span', { class: 'lab', text: 'Status' }), h('div', { class: 'tabs' }, pre, live, wl)),
       h('span', { class: 'count', text: state.tab === 'pre-token' ? visibleRows().length + ' rows shown' : DATA.live.length + ' live-token protocols' })
     );
   }
@@ -186,9 +186,9 @@
     var list = sortRows(visibleRows());
     if (list.length === 0) {
       return h('div', { class: 'panel' }, h('div', { class: 'empty' },
-        h('h2', { text: 'No protocol matches that filter' }),
-        h('p', { text: 'Clear the search or pick another category or chain to see the board again.' }),
-        h('button', { class: 'button primary', type: 'button', text: 'Clear filters', onclick: function () { state.q = ''; state.category = 'all'; state.chain = 'all'; writeHash(); render(); } })
+        h('h2', { text: 'Nothing matches' }),
+        h('p', { text: 'Clear the search or pick another filter.' }),
+        h('button', { class: 'button primary', type: 'button', text: 'Clear', onclick: function () { state.q = ''; state.category = 'all'; state.chain = 'all'; state.watchlistOnly = false; writeHash(); render(); } })
       ));
     }
     var max = list[0].implied_value_usd || 1;
@@ -205,7 +205,7 @@
       },
         h('td', null, h('span', { class: 'rank-badge', text: String(r.rank) })),
         h('td', null, h('div', { class: 'name' },
-          h('b', null, r.name, PLANS[r.slug] ? h('span', { class: 'tag', text: 'RESEARCHED' }) : null),
+          h('b', null, r.name, r.researched ? h('span', { class: 'tag', text: 'RESEARCHED' }) : null),
           h('span', { class: 'sub', text: (r.category || 'Other') + ' · ' + (r.chains && r.chains.length ? r.chains.slice(0, 2).join(', ') : 'an unnamed chain') })
         )),
         h('td', { class: 'num', text: fmtUsd(r.tvl_usd) }),
@@ -222,7 +222,7 @@
     return h('div', { class: 'panel' },
       h('div', { class: 'table-wrap' },
         h('table', null,
-          h('caption', { text: 'Pre-token protocols, strongest implied value first. Select a row for its model and farm plan.' }),
+          h('caption', { text: 'Pre-token protocols, strongest first. Select a row for its model and plan.' }),
           h('thead', null, h('tr', null,
             sortHead('implied', 'Rank'),
             sortHead('name', 'Protocol'),
@@ -253,7 +253,7 @@
     return h('div', { class: 'panel' },
       h('div', { class: 'table-wrap' },
         h('table', null,
-          h('caption', { text: 'Token live: these protocols already trade, so their market cap is a fact, not a model. They are set aside from the pre-token ranking.' }),
+          h('caption', { text: 'Already trading: market cap is a fact, not a model.' }),
           h('thead', null, h('tr', null, h('th', { scope: 'col', text: 'Status' }), h('th', { scope: 'col', text: 'Protocol' }), h('th', { scope: 'col', text: 'TVL' }), h('th', { scope: 'col', text: '7d' }), h('th', { scope: 'col', text: 'Market cap' }), h('th', { scope: 'col', text: 'Token' }))),
           tbody
         )
@@ -263,16 +263,21 @@
 
   function modelPanel() {
     var m = DATA.model;
+    var v = DATA.validation;
     return h('section', { class: 'panel model' },
       h('h2', { text: 'How implied value is computed' }),
-      h('p', { text: 'One function scores every row, from the snapshot figures alone. No name is special-cased, no row hand-picked. TVL anchors the value; growth moves it; age with no token and chain breadth adjust it.' }),
+      h('p', { text: 'One function scores every row from the snapshot alone. TVL anchors the value; growth moves it; age with no token and chain breadth adjust it.' }),
       h('div', { class: 'formula' },
         h('div', null, 'implied = round( tvl_usd × ', h('b', { text: String(m.base_multiple) }), ' × growth × maturity × breadth )'),
         h('div', null, 'growth = 1 + clamp(change_7d, ', h('b', { text: String(m.growth_floor) }), ', ', h('b', { text: String(m.growth_cap) }), ') / 100 × ', h('b', { text: String(m.growth_weight) })),
         h('div', null, 'maturity = ', h('b', { text: String(m.maturity_floor) }), ' + min(age_days, ', h('b', { text: String(m.maturity_days) }), ') / ', h('b', { text: String(m.maturity_days) }), ' × ', h('b', { text: String(m.maturity_range) })),
         h('div', null, 'breadth = 1 + ', h('b', { text: String(m.breadth_per_chain) }), ' × min(chains, ', h('b', { text: String(m.breadth_max_chains) }), ')')
       ),
-      h('p', { text: 'Age is the time since the protocol was first listed, the best record of how long it has run with no token; an unlisted age uses ' + m.unknown_age_days + ' days. The early radar is every pre-token protocol below the watchlist floor, picked by implied value; live-token protocols are set aside with market caps shown. The snapshot is DefiLlama’s record as of ' + DATA.as_of + '; a protocol may have launched a token since — each researched plan says what the research found.' })
+      h('p', { text: 'Age is time since first listing; unlisted ages use ' + m.unknown_age_days + ' days. Live-token protocols are set aside. Snapshot: DefiLlama as of ' + DATA.as_of + '.' }),
+      v ? h('div', null,
+        h('h3', { text: 'Out-of-sample check' }),
+        h('p', { text: 'On ' + v.comps + ' traded-token comps (hash split): fit n=' + v.fit_n + ', median mcap/TVL ' + v.fit_median + '; test n=' + v.test_n + ': radar-2 median implied/actual ' + v.radar2_median_ratio + ', 2× ' + v.radar2_within_2x_pct + '%, 3× ' + v.radar2_within_3x_pct + '%. Flat baseline (base ' + v.fit_median + '): ' + v.flat_median_ratio + ', ' + v.flat_within_2x_pct + '%, ' + v.flat_within_3x_pct + '%. The 0.30 base lands closer to the market multiple; both noisy.' })
+      ) : null
     );
   }
 
@@ -285,19 +290,18 @@
     state.selected = slug;
     writeHash();
     dialog.textContent = '';
-    var plan = PLANS[slug];
     var recomputed = impliedOf(row, DATA.model);
     var agrees = recomputed === row.implied_value_usd;
     dialog.appendChild(h('div', { class: 'detail-head' },
       h('div', null,
         h('span', { class: 'brand-name', text: 'Rank ' + row.rank + ' of ' + DATA.board_size }),
         h('h2', { id: 'detail-title', text: row.name }),
-        h('p', { class: 'sub', text: (row.category || 'Other') + ' · ' + (row.chains && row.chains.length ? row.chains.join(', ') : 'an unnamed chain') + (plan ? ' · researched plan' : ' · model-generated plan') })
+        h('p', { class: 'sub', text: (row.category || 'Other') + ' · ' + (row.chains && row.chains.length ? row.chains.join(', ') : 'an unnamed chain') + (row.researched ? ' · researched plan' : ' · model-generated plan') })
       ),
       h('button', { class: 'close', type: 'button', 'aria-label': 'Close details', text: 'Close', onclick: function () { dialog.close(); } })
     ));
     dialog.appendChild(h('p', { class: 'blurb', text: row.blurb || '' }));
-    if (plan && plan.note) dialog.appendChild(h('div', { class: 'warn', text: plan.note }));
+    if (row.note) dialog.appendChild(h('div', { class: 'warn', text: row.note }));
     dialog.appendChild(h('section', { class: 'detail-section' },
       h('h3', { text: 'Implied value' }),
       h('div', { class: 'equation' },

@@ -1,5 +1,9 @@
 // Token Radar's entry program (Node 22, standard library only).
 //
+// V3: sixty researched farm plans (lib/plans.ts), warn notes on the rows that need
+// one, and an out-of-sample validation of the model in lib/model.ts. The model
+// itself is unchanged radar-2: the validation is the evidence for keeping it.
+//
 // It reads the sealed snapshot from /input/snapshot.json (or --input <file|dir>), scores every
 // pre-token protocol with the radar-2 model in lib/model.ts, writes the ranked board to
 // /output/board.json, and copies this repository's dashboard/ and screenshots/ to /output.
