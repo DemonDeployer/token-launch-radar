@@ -26,6 +26,8 @@ export interface ResearchedPlan {
   blurb: string;
   steps: FarmStep[];
   note?: string;
+  /** On-chain actions the plan needs; the fee model multiplies this by gas-per-tx. */
+  txs?: number;
 }
 
 /** Researched plans, by snapshot slug. Filled in from protocol research. */
@@ -1865,6 +1867,148 @@ export const PLANS: Record<string, ResearchedPlan> = {
         text: 'Never send funds to an unverified contract claiming to be Vishwa; agent-banking pitches are a common scam pattern.',
         cost: 'free',
         time: '5 min',
+      },
+    ],
+  },
+  'sentora-curator': {
+    blurb:
+      'Sentora (IntoTheBlock + Trident Digital, merged May 2025, $25M Series A): institutional vault curator for PYUSD and RLUSD on Morpho, Kamino, Euler and Upshift; about $2.7B curated. No token, no points program.',
+    note: 'No token and no points program: the farm is yield on the deposit itself, and Sentora TVL is double-counted — the dollars sit in Morpho and the other protocols it curates.',
+    txs: 4,
+    steps: [
+      {
+        text: 'Get PYUSD or USDC in an EVM wallet like MetaMask or Rabby.',
+        cost: '$1-5 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Open Morpho, find a Sentora-curated vault (PYUSD Main), and check the curator address, APY and performance fee.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'Approve the vault, then deposit; vault shares accrue the lending yield after the curator fee.',
+        cost: '$1-5 gas per tx',
+        time: '5 min',
+      },
+      {
+        text: 'Hold for weeks and check live APY and fees on Morpho; some Sentora products are not open to US residents.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: 'Withdraw from the vault in the Morpho app; never pay anyone to claim a Sentora reward.',
+        cost: '$1-5 gas per tx',
+        time: '10 min',
+      },
+    ],
+  },
+  'polymarket-international': {
+    blurb:
+      'Polymarket International: the largest onchain prediction market (Polygon order book, pUSD collateral, UMA oracle). POLY token + airdrop confirmed by its CMO in Oct 2025 but not live, no TGE date, no points program; makers earn daily USDC Liquidity Rewards.',
+    note: 'No token, no snapshot, no eligibility rules published — and the company is weighing an IPO instead. Farm the USDC liquidity rewards; treat any future POLY as a bonus, not a promise. Closed to US users; 42 countries blocked.',
+    txs: 5,
+    steps: [
+      {
+        text: 'Get pUSD or USDC on Polygon in a wallet, and check your country is not on the blocked list.',
+        cost: 'cents of gas on Polygon',
+        time: '10 min',
+      },
+      {
+        text: 'Pick liquid markets (crypto, sports, politics) and post resting limit orders as a maker; makers pay 0% fee.',
+        cost: 'taker fees only if you take; makers 0%',
+        time: '15 min',
+      },
+      {
+        text: 'Earn daily USDC Liquidity Rewards on resting orders plus 15-25% of fees back as maker rebates.',
+        cost: 'nothing but the orders',
+        time: '10 min/day',
+      },
+      {
+        text: 'Hold positions in selected long-dated markets for Holding Rewards, about 4% annualised where offered.',
+        cost: 'capital held in positions',
+        time: 'weeks',
+      },
+      {
+        text: 'Keep a log of markets, volume and rewards; never wash-trade, and never connect to a site claiming a POLY claim page.',
+        cost: 'free',
+        time: '5 min/week',
+      },
+    ],
+  },
+  'bitfi-basis': {
+    blurb:
+      'BitFi Basis: CeDeFi basis-trading platform (bfUSD yield stablecoin, bfBTC yield BTC; about $223M TVL). BitFi Points Program is live: holding bfBTC/bfUSD, bfUSD quests, referrals and Galxe; future airdrops by points. bfBTC quests ended 31 Dec 2025.',
+    note: 'CeDeFi risk: strategies run off-chain with Ceffu custody, no audits listed on DefiLlama, and headline yields (5-8% BTC, 15-30% stables) are the project own figures, not guaranteed. A $BFI presale was reported for June 2026 but no token is on record in the snapshot.',
+    txs: 4,
+    steps: [
+      {
+        text: 'Get USDT, USDC or BTC on BNB Chain, Ethereum or Base in a wallet.',
+        cost: '$1-5 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Open app.bitfi.one and mint bfUSD from USDT/USDC, or bfBTC from BTC.',
+        cost: 'gas to mint',
+        time: '10 min',
+      },
+      {
+        text: 'Hold bfUSD, or stake it into the Horizon or Pulsar vaults, to earn HODL points each epoch (about daily).',
+        cost: 'gas to stake',
+        time: '10 min',
+      },
+      {
+        text: 'Complete the bfUSD one-time quests and check your points balance on the points page.',
+        cost: 'free',
+        time: '10 min',
+      },
+      {
+        text: 'Optional: LP bfUSD on Curve for extra points, and watch impermanent loss on the pair.',
+        cost: 'gas plus LP risk',
+        time: '15 min',
+      },
+      {
+        text: 'Track points per epoch; withdraw through the BitFi app only, and verify the contract address first.',
+        cost: 'gas to withdraw',
+        time: '10 min',
+      },
+    ],
+  },
+  'defi-saver-asset-management': {
+    blurb:
+      'DeFi Saver: a position-management dashboard for lending protocols (Aave, Morpho, Spark, Liquity). No token and no confirmed points program found — the farm is the managed leveraged position itself, not a DeFi Saver drop.',
+    note: 'No DeFi Saver token or confirmed points program was found; third-party points pages are not official sources. Do not pay for eligibility.',
+    txs: 5,
+    steps: [
+      {
+        text: 'Get ETH or USDC on Ethereum in a wallet; Ethereum gas is the main cost here.',
+        cost: '$2-10 gas per tx',
+        time: '10 min',
+      },
+      {
+        text: 'Open DeFi Saver, connect, and pick a protocol (Aave or Morpho) and a position: leveraged long ETH or stable yield.',
+        cost: 'free to browse',
+        time: '15 min',
+      },
+      {
+        text: 'Supply collateral, borrow and loop once with the one-click recipe; read the liquidation price before confirming.',
+        cost: 'gas per action',
+        time: '15 min',
+      },
+      {
+        text: 'Turn on automation (stop-loss or auto-boost) so the position defends itself while you are away.',
+        cost: 'gas to set up',
+        time: '10 min',
+      },
+      {
+        text: 'Hold and monitor the health factor; repay or unwind before it nears liquidation.',
+        cost: 'deposit held',
+        time: 'weeks',
+      },
+      {
+        text: 'Close the position through DeFi Saver and log the entry, exits and fees.',
+        cost: 'gas to close',
+        time: '10 min',
       },
     ],
   },
